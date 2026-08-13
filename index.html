@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Happy Birthday, Lynette</title>
+
+<audio id="birthdaySong" loop>
+    <source src="birthday-song.mp3" loop preload="auto">
+</audio>
+
+<<script>
+document.addEventListener("click", function () {
+    const song = document.getElementById("birthdaySong");
+    song.play();
+}, { once: true });
+</script>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#3a2166">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="For Lynette">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+<link rel="icon" href="assets/icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;1,600&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Cinzel:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- persistent atmosphere: stars + drifting petals + horizon glow -->
+<canvas id="stars"></canvas>
+<div id="petal-field" aria-hidden="true"></div>
+<div class="horizon" aria-hidden="true"></div>
+<div class="mountains" aria-hidden="true"></div>
+
+<audio id="bgm" src="assets/audio/song.m4a" loop preload="auto"></audio>
+
+<button id="muteToggle" class="mute-toggle hidden" aria-label="Toggle music">
+  <svg id="iconSound" viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M4 9v6h4l5 5V4L8 9H4z"/><path fill="currentColor" d="M16.5 12a4.5 4.5 0 0 0-2.5-4.03v8.06A4.5 4.5 0 0 0 16.5 12z"/></svg>
+  <svg id="iconMute" viewBox="0 0 24 24" width="18" height="18" style="display:none"><path fill="currentColor" d="M4 9v6h4l5 5V4L8 9H4z"/><path fill="currentColor" d="M19.5 12L22 9.5l-1.5-1.5L18 10.5 15.5 8 14 9.5 16.5 12 14 14.5 15.5 16 18 13.5 20.5 16 22 14.5z"/></svg>
+</button>
+
+<main id="app">
+
+  <!-- SCREEN 0 — LOCK -->
+  <section class="screen active" id="screen-lock" data-screen="0">
+    <div class="lock-wrap">
+      <button class="seal" id="sealBtn" aria-label="Reveal passcode entry">
+        <span class="seal-ring"></span>
+        <svg viewBox="0 0 100 100" class="seal-heart">
+          <path d="M50 85 C20 62 6 42 6 25 C6 10 18 2 32 2 C42 2 50 8 50 18 C50 8 58 2 68 2 C82 2 94 10 94 25 C94 42 80 62 50 85 Z"/>
+        </svg>
+      </button>
+
+      <p class="glyph">𓆩❤︎𓆪</p>
+      <h1 class="title-lock">LOCKED</h1>
+      <p class="hint">Click the heart above to reveal passcode entry</p>
+
+      <div class="pass-form hidden" id="passForm">
+        <div class="dial-dots" id="dialDots">
+          <span class="dial-dot"></span>
+          <span class="dial-dot"></span>
+          <span class="dial-dot"></span>
+          <span class="dial-dot"></span>
+        </div>
+
+        <div class="dial-pad" id="dialPad">
+          <button type="button" class="dial-key" data-digit="1">1</button>
+          <button type="button" class="dial-key" data-digit="2">2</button>
+          <button type="button" class="dial-key" data-digit="3">3</button>
+          <button type="button" class="dial-key" data-digit="4">4</button>
+          <button type="button" class="dial-key" data-digit="5">5</button>
+          <button type="button" class="dial-key" data-digit="6">6</button>
+          <button type="button" class="dial-key" data-digit="7">7</button>
+          <button type="button" class="dial-key" data-digit="8">8</button>
+          <button type="button" class="dial-key" data-digit="9">9</button>
+          <span class="dial-key-spacer"></span>
+          <button type="button" class="dial-key" data-digit="0">0</button>
+          <button type="button" class="dial-key dial-key-back" id="dialBack" aria-label="Backspace">⌫</button>
+        </div>
+
+        <p class="pass-error" id="passError">That's not quite it — try again</p>
+      </div>
+    </div>
+
+    <p class="credit">crafted with love</p>
+  </section>
+
+  <!-- SCREEN 0.5 — CINEMATIC INTRO -->
+  <section class="screen cinema-screen" id="screen-cinematic" data-screen="0.5">
+    <button class="skip-btn" id="skipCinematicBtn">Skip ⏭</button>
+
+    <div class="cinema-stage">
+
+      <!-- studio card -->
+      <div class="cinema-block hidden" id="cinemaCard">
+        <p class="cinema-rule"></p>
+        <p class="cinema-kicker">A Love Story</p>
+
+        <p class="cinema-meta">
+          Runtime<br>
+          <span class="cinema-runtime">00:10</span>
+        </p>
+
+        <p class="cinema-kicker small">Starring</p>
+
+        <p class="cinema-names">
+          Alex <span class="amp">&amp;</span> Lynette
+        </p>
+
+        <p class="cinema-rule"></p>
+      </div>
+
+      <!-- shared narration line -->
+      <p class="cinema-line hidden" id="cinemaLine"></p>
+
+      <!-- video -->
+      <div class="cinema-video-wrap hidden" id="cinemaVideoWrap">
+        <video id="storyVideo" src="story.mp4" playsinline preload="auto"></video>
+         <button class="video-sound-toggle" id="videoSoundToggle" aria-label="Toggle video sound">🔇</button>
+      </div>
+
+      <!-- meeting duration counter -->
+      <div class="cinema-counter hidden" id="cinemaCounter">
+        <div class="counter-row small">
+          <div class="counter-box">
+            <span class="counter-num" id="meetMonths">0</span>
+            <span class="counter-label">Months</span>
+          </div>
+
+          <div class="counter-box">
+            <span class="counter-num" id="meetWeeks">0</span>
+            <span class="counter-label">Weeks</span>
+          </div>
+
+          <div class="counter-box">
+            <span class="counter-num" id="meetDays">0</span>
+            <span class="counter-label">Days</span>
+          </div>
+        </div>
+
+        <p class="cinema-line small static">since they met</p>
+      </div>
+
+      <!-- gold finale line -->
+      <h1 class="cinema-gold hidden" id="cinemaGold">
+        Happy Birthday, Lynette
+      </h1>
+
+    </div>
+  </section>
+
+  <!-- SCREEN 1 — LOADING -->
+  <section class="screen" id="screen-loading" data-screen="1">
+    <div class="loading-orb">
+      <span class="orb-ring"></span>
+
+      <svg class="orb-heart" viewBox="0 0 100 100">
+        <path d="M50 85 C20 62 6 42 6 25 C6 10 18 2 32 2 C42 2 50 8 50 18 C50 8 58 2 68 2 C82 2 94 10 94 25 C94 42 80 62 50 85 Z"/>
+      </svg>
+    </div>
+
+    <h1 class="title-main">It's Your Special Day</h1>
+
+    <div class="divider">
+      <span>✦</span>
+    </div>
+
+    <p class="subtext">I made something special for you&hellip;</p>
+
+    <div class="loading-bar">
+      <div class="loading-fill" id="loadingFill"></div>
+    </div>
+
+    <button class="btn btn-primary btn-reveal hidden" id="startBtn">
+      Start
+    </button>
+  </section>
+
+  <!-- SCREEN 2 — AGE COUNTER -->
+  <section class="screen" id="screen-counter" data-screen="2">
+
+    <div class="avatar-ring">
+      <span class="orb-ring"></span>
+
+      <svg class="orb-heart small" viewBox="0 0 100 100">
+        <path d="M50 85 C20 62 6 42 6 25 C6 10 18 2 32 2 C42 2 50 8 50 18 C50 8 58 2 68 2 C82 2 94 10 94 25 C94 42 80 62 50 85 Z"/>
+      </svg>
+    </div>
+
+    <h1 class="title-main">Happy Birthday, Lynette</h1>
+
+    <p class="subtext">You have completed</p>
+
+    <div class="counter-row">
+      <div class="counter-box">
+        <span class="counter-num" id="numYears">0</span>
+        <span class="counter-label">Years</span>
+      </div>
+
+      <div class="counter-box">
+        <span class="counter-num" id="numMonths">0</span>
+        <span class="counter-label">Months</span>
+      </div>
+
+      <div class="counter-box">
+        <span class="counter-num" id="numDays">0</span>
+        <span class="counter-label">Days</span>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="toMemoriesBtn">
+      Next
+    </button>
+  </section>
+
+  <!-- SCREEN 3 — MEMORIES CAROUSEL -->
+  <section class="screen" id="screen-memories" data-screen="3">
+
+    <h1 class="title-main">Special Memories</h1>
+
+    <p class="subtext">Swipe for more ✦</p>
+
+    <div class="carousel" id="carousel">
+      <div class="carousel-track" id="carouselTrack">
+
+        <div class="card">
+          <img src="lynette1.jpeg" alt="Lynette">
+        </div>
+
+        <div class="card">
+          <img src="lynette2.jpeg" alt="Lynette">
+        </div>
+
+        <div class="card">
+          <img src="lynette3.jpeg" alt="Lynette">
+        </div>
+
+        <div class="card">
+          <img src="lynette1.jpeg" alt="Lynette">
+        </div>
+
+        <div class="card">
+          <img src="lynette4.jpeg" alt="Lynette">
+        </div>
+
+      </div>
+    </div>
+
+    <div class="dots" id="dots"></div>
+
+    <button class="btn btn-primary" id="toLetterBtn">
+      Message
+    </button>
+  </section>
+
+  <!-- SCREEN 4 — LETTER TEASER -->
+  <section class="screen" id="screen-teaser" data-screen="4">
+
+    <h1 class="title-main">A Letter, Just For You</h1>
+
+    <p class="subtext">
+      Tap the heart to unseal your message&hellip;
+    </p>
+
+    <button class="envelope" id="envelopeBtn" aria-label="Open letter">
+
+      <svg class="env-flap" viewBox="0 0 200 60" preserveAspectRatio="none">
+        <polygon points="0,0 200,0 100,55"/>
+      </svg>
+
+      <span class="env-body">
+        <span class="env-heart">
+          <svg viewBox="0 0 24 24">
+            <path fill="currentColor" d="M12 21s-7.5-4.6-10.2-9.1C.3 9.2 1.4 5.8 4.4 4.7c2-.7 4 0 5.2 1.8L12 9.3l2.4-2.8c1.2-1.8 3.2-2.5 5.2-1.8 3 1.1 4.1 4.5 2.6 7.2C19.5 16.4 12 21 12 21z"/>
+          </svg>
+        </span>
+      </span>
+
+      <span class="env-caption">Tap to open</span>
+    </button>
+
+    <div class="mini-divider">
+      <span>❤</span>
+    </div>
+  </section>
+
+  <!-- LETTER MODAL -->
+  <div class="modal-overlay" id="letterModal">
+
+    <div class="modal-card">
+
+      <button class="modal-close" id="modalClose" aria-label="Close">
+        ✕
+      </button>
+
+      <h2 class="modal-title">
+        Just For You <span class="sparkle">✨</span>
+      </h2>
+
+      <p class="modal-sub">From my heart to yours</p>
+
+      <div class="modal-body">
+        <p class="letter-greeting">
+          Happy Birthday, Lynette&nbsp;💗
+        </p>
+
+        <p id="letterText"></p>
+      </div>
+
+      <div class="modal-actions">
+
+        <button class="btn btn-primary" id="celebrateBtn">
+          Celebrate
+        </button>
+
+        <button class="btn btn-ghost" id="restartBtn">
+          Restart ↺
+        </button>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 5 — FINALE -->
+  <section class="screen" id="screen-finale" data-screen="5">
+
+    <div class="finale-inner">
+
+      <h1 class="title-main finale-title">
+        Happy Birthday, Lynette
+        <span class="tada">🎉</span>
+      </h1>
+
+      <div class="finale-frame">
+        <img src="lynette4.jpeg" alt="Lynette">
+      </div>
+
+      <p class="finale-line">
+        Grow old along with me! The best is yet to be.
+      </p>
+
+      <button class="btn btn-ghost btn-small" id="restartBtn2">
+        Restart the story ↺
+      </button>
+
+      <button class="hidden-surprise" id="oneLastThingBtn">
+        ✨ One Last Thing&hellip;
+      </button>
+
+    </div>
+  </section>
+
+  <!-- FINAL SCENE MODAL (hidden surprise) -->
+  <div class="modal-overlay" id="finalSceneModal">
+
+    <div class="modal-card final-scene-card">
+
+      <button class="modal-close" id="finalSceneClose" aria-label="Close">
+        ✕
+      </button>
+
+      <p class="final-scene-text">
+        To the girl<br>
+        who unknowingly became<br>
+        my favorite chapter.
+      </p>
+
+      <p class="final-scene-text emphasize">
+        Happy Birthday,<br>
+        Lynette.
+      </p>
+
+      <p class="final-scene-text small">
+        Forever starts with moments like these.
+      </p>
+
+      <p class="final-scene-sign">
+        — Alex
+      </p>
+
+    </div>
+  </div>
+
+</main>
+
+<canvas id="flowerCanvas"></canvas>
+
+<script src="script.js"></script>
+
+</body>
+</html>
